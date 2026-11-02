@@ -1,0 +1,73 @@
+<!doctype html><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>BosW-V1.2</title>
+<style>*{box-sizing:border-box;touch-action:manipulation}body{margin:0;height:100vh;overflow:hidden;font:15px system-ui,sans-serif;background:linear-gradient(135deg,#1d4e89,#0b2239);user-select:none}
+#d{position:absolute;inset:0 0 48px 0}.w{position:absolute;background:#fff;color:#111;border-radius:8px;box-shadow:0 6px 24px #0008;display:flex;flex-direction:column;min-width:230px;min-height:150px;overflow:hidden}
+.w.mx{inset:0!important;width:auto!important;height:auto!important;border-radius:0}.w.mn{display:none}
+.h{display:flex;align-items:center;background:#2b3a4a;color:#fff;height:42px;padding-left:10px;touch-action:none}.h b{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.h button{width:46px;height:42px;border:0;background:none;color:#fff;font-size:18px}.h button:last-child{background:#a33}
+.c{flex:1;overflow:auto;position:relative;padding:8px;user-select:text}.c.f{padding:0}.c iframe{width:100%;height:100%;border:0}
+.rz{position:absolute;right:0;bottom:0;width:28px;height:28px;touch-action:none;background:linear-gradient(135deg,#0000 50%,#888 50%)}
+#t{position:absolute;bottom:0;left:0;right:0;height:48px;background:#101820;display:flex;align-items:center;color:#fff;gap:4px;padding:0 4px}
+#t button{height:40px;min-width:44px;border:0;border-radius:6px;background:#2b3a4a;color:#fff;padding:0 12px;max-width:130px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#t button.on{background:#3d6fa8}#tb{flex:1;display:flex;gap:4px;overflow:hidden}#tr{display:flex;flex-direction:column;align-items:flex-end;font-size:12px;line-height:1.2;padding:0 8px}
+#tr span{cursor:pointer;padding:1px 4px}#sm{position:absolute;left:4px;bottom:52px;width:260px;max-height:70vh;overflow:auto;background:#fff;color:#111;border-radius:10px;box-shadow:0 6px 24px #000a;display:none}
+#sm div{padding:13px 16px;border-bottom:1px solid #8883}#sm div:active{background:#cde}
+.c input,.c select,.c textarea,.c button{font-size:16px;padding:8px;margin:2px 0}.c textarea{width:100%;height:calc(100% - 100px);font:13px monospace}
+.c pre{margin:0;white-space:pre-wrap;font:13px monospace}.cal{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:2px}.cal i{font-style:normal;padding:8px 0;border-radius:6px}.cal .n{background:#3d6fa8;color:#fff}.cal .hd{font-weight:600}
+.big{font-size:42px;font-weight:600;text-align:center}</style>
+<div id=d></div><div id=sm></div>
+<div id=t><button onclick="menu()">&#9776; Start</button><div id=tb></div><div id=tr><span id=td onclick="app('cal')"></span><span id=tt onclick="app('clk')"></span></div></div>
+<script>
+const $=s=>document.querySelector(s),W={},p2=n=>String(n).padStart(2,'0');let Z=1,N=0,off=0,tz=0,src='?',inst=[],LK={},h12=0;const NOPW='<p style="padding:12px">Add <code>CIRCUITPY_WEB_API_PASSWORD = "yourpassword"</code> to settings.toml on the board and restart it. This window shows CircuitPython&#39;s built-in web workflow.</p>';
+const get=async u=>(await fetch(u)).text(),post=async(u,b)=>(await fetch(u,{method:'POST',body:b||''})).text();
+const dt=()=>new Date(Date.now()+off+tz*60000),MO='January February March April May June July August September October November December'.split(' ');
+async function sync(){try{const d=await (await fetch('/api/desk/time')).json();off=d.ms-Date.now();tz=d.tz;src=d.src;h12=d.h12}catch(e){}}
+function ft(d){let h=d.getUTCHours(),a='';if(h12){a=h<12?' AM':' PM';h=h%12||12}return(h12?h:p2(h))+':'+p2(d.getUTCMinutes())+':'+p2(d.getUTCSeconds())+a}
+function tick(){const d=dt();$('#tt').textContent=ft(d);$('#td').textContent=p2(d.getUTCDate())+'/'+p2(d.getUTCMonth()+1)+'/'+d.getUTCFullYear();
+if(W.clk)W.clk.q('.big').textContent=$('#tt').textContent,W.clk.q('.s').textContent=d.toUTCString().slice(0,16)+'  source: '+src}
+function win(id,title,fill,o={}){if(W[id]){shw(id);return}const e=document.createElement('div');e.className='w';e.style.cssText='left:'+(16+N%5*26)+'px;top:'+(16+N++%5*26)+'px;width:'+(o.w||440)+'px;height:'+(o.h||330)+'px';
+if(innerWidth<700)e.classList.add('mx');e.innerHTML='<div class=h><b>'+title+'</b><button>&#8211;</button><button>&#9633;</button><button>&#10005;</button></div><div class="c'+(o.f?' f':'')+'"></div><div class=rz></div>';
+$('#d').appendChild(e);const b=document.createElement('button');b.textContent=title;b.onclick=()=>{e.classList.contains('mn')||W[id].top?min(id):shw(id)};$('#tb').appendChild(b);
+const w=W[id]={e,b,q:s=>e.querySelector(s),top:1};const[mn,mx,x]=e.querySelectorAll('.h button');mn.onclick=()=>min(id);mx.onclick=()=>e.classList.toggle('mx');x.onclick=()=>{e.remove();b.remove();delete W[id];o.close&&o.close()};
+e.onpointerdown=()=>shw(id);drag(e.querySelector('.h'),e,0);drag(e.querySelector('.rz'),e,1);Promise.resolve().then(()=>fill(e.querySelector('.c'),w)).catch(err=>{e.querySelector('.c').textContent='Error: '+err});shw(id)}
+function drag(h,e,rs){h.onpointerdown=ev=>{if(ev.target.tagName=='BUTTON'||e.classList.contains('mx'))return;h.setPointerCapture(ev.pointerId);const x=ev.clientX,y=ev.clientY,l=e.offsetLeft,t=e.offsetTop,w=e.offsetWidth,hh=e.offsetHeight;
+h.onpointermove=m=>{const dx=m.clientX-x,dy=m.clientY-y;if(rs){e.style.width=Math.max(230,w+dx)+'px';e.style.height=Math.max(150,hh+dy)+'px'}else{e.style.left=Math.max(-w+60,l+dx)+'px';e.style.top=Math.max(0,t+dy)+'px'}};h.onpointerup=()=>{h.onpointermove=null}}}
+function shw(id){Object.values(W).forEach(w=>{w.top=0;w.b.classList.remove('on')});const w=W[id];w.e.classList.remove('mn');w.e.style.zIndex=++Z;w.top=1;w.b.classList.add('on')}
+function min(id){const w=W[id];w.e.classList.add('mn');w.top=0;w.b.classList.remove('on')}
+function menu(){const m=$('#sm');if(m.style.display=='block'){m.style.display='none';return}build();m.style.display='block'}
+const BI=[['fm','&#128193; Files'],['tm','&gt;_ Terminal'],['am','&#9881; App manager'],['clk','&#128339; Clock'],['cal','&#128197; Calendar'],['ntp','&#127760; Time settings']];
+async function build(){try{inst=JSON.parse(await get('/api/desk/apps'))}catch(e){}$('#sm').innerHTML=BI.map(a=>'<div data-a='+a[0]+'>'+a[1]+'</div>').join('')+inst.filter(a=>a.main).map(a=>'<div data-a="x:'+a.name+'">&#9638; '+(a.title||a.name)+(a.missing.length?' (needs libraries)':'')+'</div>').join('');
+$('#sm').querySelectorAll('div').forEach(d=>d.onclick=()=>{$('#sm').style.display='none';app(d.dataset.a)})}
+function app(a){if(a.startsWith('x:')){const n=a.slice(2);win('x'+n,n,(c,w)=>{c.classList.add('f');const a=inst.find(i=>i.name==n)||{};if(a.missing&&a.missing.length){alert('Install these libraries first: '+a.missing.join(', '));w.e.querySelector('.h button:last-child').click();return}c.innerHTML='<iframe src="/app/file?name='+n+'&f='+(a.main||'index.html')+'"></iframe>';const hb=()=>W['x'+n]?post('/api/desk/app_fg?name='+n+'&open=1'):clearInterval(t),t=setInterval(hb,5000);hb()},{w:420,h:360,close:()=>post('/api/desk/app_fg?name='+n+'&open=0')});return}({fm:fm,tm:tm,am:am,clk:clk,cal:cal,ntp:ntp})[a]()}
+function fm(){win('fm','Files',c=>{c.classList.add('f');c.innerHTML=LK.enabled?'<iframe src="'+LK.files+'"></iframe>':NOPW},{w:560,h:440})}
+function clk(){win('clk','Clock',c=>{c.innerHTML='<div class=big></div><p class=s style="text-align:center"></p><p style="text-align:center"><button id=hb>12 / 24 hour</button></p>';c.querySelector('#hb').onclick=async()=>{h12=h12?0:1;await post('/api/desk/h12?v='+h12);tick()};tick()},{w:320,h:250})}
+function cal(){win('cal','Calendar',(c,w)=>{let y,m;const d=dt();y=d.getUTCFullYear();m=d.getUTCMonth();const r=()=>{const f=new Date(Date.UTC(y,m,1)).getUTCDay(),n=new Date(Date.UTC(y,m+1,0)).getUTCDate(),t=dt();
+let h='<div style="display:flex;justify-content:space-between;align-items:center"><button id=pv>&#9664;</button><b>'+MO[m]+' '+y+'</b><button id=nx>&#9654;</button></div><div class=cal>'+'SMTWTFS'.split('').map(x=>'<i class=hd>'+x+'</i>').join('')+'<i></i>'.repeat(f);
+for(let i=1;i<=n;i++)h+='<i'+(i==t.getUTCDate()&&m==t.getUTCMonth()&&y==t.getUTCFullYear()?' class=n':'')+'>'+i+'</i>';c.innerHTML=h+'</div>';c.querySelector('#pv').onclick=()=>{m--;if(m<0){m=11;y--}r()};c.querySelector('#nx').onclick=()=>{m++;if(m>11){m=0;y++}r()}};r()},{w:340,h:340})}
+function ntp(){win('ntp','Time settings',async c=>{const r=await fetch('/api/desk/ntp');if(!r.ok)throw 'the board answered '+r.status;const s=await r.json(),all=(s.servers||[]).concat(s.custom||[]),q=x=>c.querySelector(x);
+c.innerHTML='Server<br><select id=sv>'+all.map(x=>'<option'+(x==s.server?' selected':'')+'>'+x+'</option>').join('')+'</select><br>Or add another address<br><input id=cu placeholder="my.ntp.server"><br>Sync every (s)<br><select id=iv><option>1</option><option>2</option><option>3</option></select><br>UTC offset (minutes)<br><input id=tz type=number><br>Time format<br><select id=hf><option value=0>24 hour</option><option value=1>12 hour (AM/PM)</option></select><br><button id=go>Save and sync</button><pre id=o></pre>';
+q('#iv').value=s.interval;q('#tz').value=s.tz_min;q('#hf').value=s.hour12?1:0;q('#hf').onchange=async()=>{h12=+q('#hf').value;await post('/api/desk/h12?v='+h12);tick()};
+q('#go').onclick=async()=>{const h=q('#cu').value.trim()||q('#sv').value;q('#o').textContent=await post('/api/desk/ntp?server='+encodeURIComponent(h)+'&interval='+q('#iv').value+'&tz='+q('#tz').value);await sync();tick()}},{w:340,h:460})}
+function tm(){win('tm','Terminal',c=>{c.classList.add('f');c.innerHTML=LK.enabled?'<iframe src="'+LK.terminal+'"></iframe>':NOPW},{w:580,h:400})}
+async function unzip(buf){const v=new DataView(buf),u=new Uint8Array(buf);let e=u.length-22;while(e>=0&&v.getUint32(e,true)!=0x06054b50)e--;if(e<0)throw 'not a zip file';
+const n=v.getUint16(e+10,true);let p=v.getUint32(e+16,true);const out=[];
+for(let i=0;i<n;i++){const m=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true),name=new TextDecoder().decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;if(name.endsWith('/'))continue;
+const st=lo+30+v.getUint16(lo+26,true)+v.getUint16(lo+28,true);let d=u.subarray(st,st+cs);
+if(m==8)d=new Uint8Array(await new Response(new Blob([d]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());else if(m!=0)throw name+': unsupported zip compression';out.push({name,data:d})}return out}
+let pend='';
+function am(){win('am','App manager',c=>{const q=s=>c.querySelector(s),say=t=>q('#ms').textContent=t,tag=a=>[a.run,a.role=='standalone'?'':a.role+(a.master?' of '+a.master:''),a.state].filter(Boolean).join(' · ');
+const l=async()=>{inst=await (await fetch('/api/desk/apps')).json();q('#li').innerHTML=inst.map(a=>'<div style="padding:6px 0;border-bottom:1px solid #8883"><b>'+(a.title||a.name)+'</b> <small>'+a.name+' '+(a.version||'')+'</small><br><small>'+tag(a)+(a.startup?' · starts at boot':'')+'</small>'+(a.error?'<div style="color:#b00;font-size:13px">'+a.error+'</div>':'')+(a.missing.length?'<div style="color:#b00;font-size:13px">Install these libraries in /lib first: '+a.missing.join(', ')+'</div>':'')+'<div>'+(a.main?'<button data-o="'+a.name+'"'+(a.missing.length?' disabled':'')+'>Open</button> ':'')+(a.run!='foreground'?'<button data-s="'+a.name+'">'+(a.state=='running'?'Stop':'Start')+'</button> ':'')+'<button data-r="'+a.name+'">Uninstall</button></div></div>').join('')||'No apps installed';
+c.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>app('x:'+b.dataset.o));
+c.querySelectorAll('[data-s]').forEach(b=>b.onclick=async()=>{say(await post('/api/desk/app_'+(b.textContent=='Stop'?'stop':'start')+'?name='+b.dataset.s));l()});
+c.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{say(await post('/api/desk/app_remove?name='+b.dataset.r));if(W['x'+b.dataset.r])W['x'+b.dataset.r].e.querySelector('.h button:last-child').click();l()});
+if(pend){const a=inst.find(i=>i.name==pend);if(a&&!a.missing.length){const n=pend;pend='';say('Libraries found. Starting '+n);if(a.main&&a.run!='background')app('x:'+n);else say(await post('/api/desk/app_start?name='+n));l()}}};
+c.innerHTML='<b>Installed apps</b><div id=li></div><button id=ck>Check libraries again</button><hr><b>Install an app (.zip)</b><br><input type=file id=fl accept=.zip><br><button id=in>Install</button><div id=ms></div><small>A zip holds manifest.json, a page (index.html) and any other files. The app starts when it is installed.</small>';
+q('#ck').onclick=l;
+q('#in').onclick=async()=>{const f=q('#fl').files[0];if(!f){say('Choose a .zip file first');return}
+try{say('Reading '+f.name+'...');const fs=await unzip(await f.arrayBuffer()),mf=fs.find(x=>x.name=='manifest.json');let man={};try{man=JSON.parse(new TextDecoder().decode(mf.data))}catch(e){}
+const n=(man.name||f.name.replace(/\.zip$/i,'')).toLowerCase().replace(/[^a-z0-9_]/g,'_'),b=await post('/api/desk/app_begin?name='+n);if(!b.startsWith('Installing')){say(b);return}
+for(const x of fs){const r=await post('/api/desk/app_file?name='+n+'&path='+encodeURIComponent(x.name),x.data);if(r!='OK'){say(x.name+': '+r);return}}
+const dn=await post('/api/desk/app_done?name='+n);await l();const a=inst.find(i=>i.name==n);
+if(a&&a.missing.length){pend=n;say('Installed. Install the libraries listed above, then tap "Check libraries again" and the app starts.')}else{say(dn);if(a&&a.main&&a.run!='background')app('x:'+n)}}catch(e){say('Install failed: '+e)}};
+l()},{w:460,h:500})}
+fetch('/api/desk/links').then(r=>r.json()).then(j=>{LK=j}).catch(()=>{});sync();setInterval(sync,20000);setInterval(tick,1000);tick();window.onresize=()=>{};document.onpointerdown=e=>{if(!e.target.closest('#sm')&&!e.target.closest('#t button'))$('#sm').style.display='none'}
+</script>
