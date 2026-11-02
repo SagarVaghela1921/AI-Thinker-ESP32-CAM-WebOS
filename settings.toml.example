@@ -1,0 +1,5 @@
+# copy to settings.toml on the board and fill in your own values
+CIRCUITPY_WIFI_SSID = "your-wifi-name"
+CIRCUITPY_WIFI_PASSWORD = "your-wifi-password"
+# switches on CircuitPython's built-in file manager and terminal (shown in the desktop's windows)
+CIRCUITPY_WEB_API_PASSWORD = "choose-a-password"
